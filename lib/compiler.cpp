@@ -1,10 +1,13 @@
 #include <iostream>
 #include "../include/lexer.h"
 #include "../include/parser.h"
+#include "../include/typechecker.h"
+
 
 using namespace std;
 using namespace Lex;
 using namespace Parse;
+using namespace Typecheck;
 
 int main(int argc, char **argv) {
     if (!strcmp(argv[1], "-l")){
@@ -28,6 +31,24 @@ int main(int argc, char **argv) {
             exit(-1);
         }
         parseMachine.prettyPrint();
+    } else if (!strcmp(argv[1], "-t")) {
+        Lexer lexMachine = Lexer(argv[2]);
+        lexMachine.doLex();
+        Parser parseMachine = Parser(lexMachine.getTokens());
+        try {
+            parseMachine.doParse();
+        } catch (ParseException &e) {
+            cout << "Compilation failed! " << e.what() << endl;
+            exit(-1);
+        }
+        TypeChecker tcMachine = TypeChecker(parseMachine.getAst());
+        try {
+            tcMachine.doTypeCheck();
+        } catch (TypeCheckException &e) {
+            cout << "Compilation failed! " << e.what() << endl;
+            exit(-1);
+        }
+        tcMachine.prettyPrint();
     }
 
 

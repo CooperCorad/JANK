@@ -11,7 +11,10 @@ all: run
 
 compile: compiler.o
 
-parser.o:
+typechecker.o: 
+	$(CXX) $(CXXFLAGS) -c lib/typechecker.cpp -o src/typechecker.o
+
+parser.o: 
 	$(CXX) $(CXXFLAGS) -c lib/parser.cpp -o src/parser.o
 
 lexer.o: 
@@ -20,7 +23,7 @@ lexer.o:
 compiler.o:
 	$(CXX) $(CXXFLAGS) -c lib/compiler.cpp -o src/compiler.o
 
-a.out: lexer.o parser.o compiler.o
+a.out: lexer.o parser.o typechecker.o compiler.o
 	$(CXX) $(CXXFLAGS) src/*.o -o a.out
 
 run:

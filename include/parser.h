@@ -7,14 +7,15 @@
 #include <algorithm>
 #include <regex>
 
-#include "../include/lexer.h"
+#include "lexer.h"
+#include "typechecker.h"
 
 /*
     TODO:   1. see if lvl6/cont necessary?
             DONE 2. change all class containers of pts from 
                 shared_ptr -> shared_ptr 
                 for the sake of type checking l8r
-
+`
 */
 
 
@@ -111,7 +112,10 @@ namespace Parse
     };
 
 
-    class Expr : public ASTNode { };
+    class Expr : public ASTNode { 
+        public: 
+            std::shared_ptr<Typecheck::ResolvedType> ty;
+    };
 
     class IntExpr : public Expr {
         public:
@@ -730,6 +734,7 @@ namespace Parse
             Parser(std::vector<std::unique_ptr<Lex::Token>>);
 
             void prettyPrint();
+            std::vector<std::shared_ptr<ASTNode>> getAst();
             void doParse();
     };
 

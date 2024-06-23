@@ -42,6 +42,10 @@ void Parser::prettyPrint() {
     cout << "Compilation succeeded: parsing complete\n";
 }
 
+std::vector<std::shared_ptr<Parse::ASTNode>> Parser::getAst() {
+    return (std::move(astTree));
+}
+
 void Parser::doParse() {
     int pos = 0;
     if (peekToken(pos) == NEWLINE) {
