@@ -8,6 +8,7 @@
 #include <regex>
 
 #include "lexer.h"
+// #include "../include/ast.h"
 #include "typechecker.h"
 
 /*
@@ -30,12 +31,12 @@ namespace Parse
             std::string what();
     };
 
-    class ASTNode {
-        public:
-            ASTNode() = default;
-            virtual std::string to_string() { return ""; };
-            virtual ~ASTNode() = default;
-    };
+    // class ASTNode { // --> moved to typechecker.h, linker combines namespaces into same scope!
+    //     public:
+    //         ASTNode() = default;
+    //         virtual std::string to_string() { return ""; };
+    //         virtual ~ASTNode() = default;
+    // };
 
 
     class Variable : public ASTNode {
@@ -114,7 +115,11 @@ namespace Parse
 
     class Expr : public ASTNode { 
         public: 
-            std::shared_ptr<Typecheck::ResolvedType> ty;
+            mutable std::shared_ptr<Typecheck::ResolvedType> ty;
+
+            void setResolvedType(std::shared_ptr<Typecheck::ResolvedType> inTy) {
+                ty = std::move(inTy);
+            }
     };
 
     class IntExpr : public Expr {
@@ -132,7 +137,9 @@ namespace Parse
             }
             ~IntExpr() = default;
             std::string to_string() override {
-                return "(IntExpr " + std::to_string(value) + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(IntExpr " + tyStr + std::to_string(value) + ")";
             }
     };
     class FloatExpr : public Expr {
@@ -165,7 +172,9 @@ namespace Parse
             }
             ~FloatExpr() = default;
             std::string to_string() override {
-                return "(FloatExpr " + str + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(FloatExpr " + tyStr + str + ")";
             }
 
     };
@@ -177,20 +186,30 @@ namespace Parse
                 var(std::move(var)) {}
             ~VarExpr() = default;
             std::string to_string() override {
-                return "(VarExpr " + var->to_string() + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(VarExpr " + tyStr + var->to_string() + ")";
             }
     };
     class TrueExpr : public Expr {
         public:
             TrueExpr() = default;
             ~TrueExpr() = default;
-            std::string to_string() override { return "(TrueExpr)"; }
+            std::string to_string() override {
+                std::string tyStr = "";
+                if (ty) " " + tyStr = ty->to_string(); 
+                return "(TrueExpr" + tyStr + ")"; 
+            }
     };
     class FalseExpr : public Expr {
         public:
             FalseExpr() = default;
             ~FalseExpr() = default;
-            std::string to_string() override { return "(FalseExpr)"; }
+            std::string to_string() override {
+                std::string tyStr = "";
+                if (ty) tyStr = " " + ty->to_string(); 
+                return "(FalseExpr" + tyStr + ")"; 
+            }
     };
     class TupleLiteralExpr : public Expr {
         public:
@@ -204,7 +223,9 @@ namespace Parse
             ~TupleLiteralExpr() = default;
             
             std::string to_string() override {
-                std::string str = "(TupleLiteralExpr";
+                std::string tyStr = "";
+                if (ty) tyStr = " " + ty->to_string();
+                std::string str = "(TupleLiteralExpr" + tyStr;
                 for (const auto &e: exprs) {
                     str += " " + e->to_string();
                 }
@@ -224,7 +245,9 @@ namespace Parse
             ~ArrayLiteralExpr() = default;
 
             std::string to_string() override {
-                std::string str = "(ArrayLiteralExpr";
+                std::string tyStr = "";
+                if (ty) tyStr = " " + ty->to_string();
+                std::string str = "(ArrayLiteralExpr" + tyStr;
                 for (const auto &e: exprs) {
                     str += " " + e->to_string();
                 }
@@ -241,8 +264,10 @@ namespace Parse
             ~TupleIndexExpr() = default;
 
             std::string to_string() override {
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
                 char *end;
-                return "(TupleIndexExpr " + expr->to_string() + " " + std::to_string(strtoll(index.c_str(), &end, 10)) + ")";
+                return "(TupleIndexExpr " + tyStr + expr->to_string() + " " + std::to_string(strtoll(index.c_str(), &end, 10)) + ")";
             }
     };
     class ArrayIndexExpr : public Expr {
@@ -259,7 +284,9 @@ namespace Parse
             ~ArrayIndexExpr() = default;
 
             std::string to_string() override {
-                std::string str = "(ArrayIndexExpr " + expr->to_string();
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                std::string str = "(ArrayIndexExpr " + tyStr + expr->to_string();
                 for (const auto &e: indices) {
                     str += " " + e->to_string();
                 }

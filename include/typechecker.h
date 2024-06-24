@@ -1,12 +1,21 @@
-#ifndef _TYPECHECK_
-#define _TYPECHECK_
+#ifndef __TYPECHECK__
+#define __TYPECHECK__
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <algorithm>
-#include "parser.h" 
+#include <ranges>
 
-// class ASTNode;
+namespace Parse {
+    class ASTNode {
+        public:
+            ASTNode() = default;
+            virtual std::string to_string() {return "";}
+            virtual ~ASTNode() = default;
+    };
+}
+
 
 namespace Typecheck
 {
@@ -25,8 +34,10 @@ namespace Typecheck
             ResolvedType() = default;
             virtual ~ResolvedType() = default;
 
-            virtual std::string to_string();
-            virtual bool equals (const std::shared_ptr<ResolvedType> other);
+            virtual std::string to_string() {return "";}
+            virtual bool equals (const std::shared_ptr<ResolvedType> other) {
+                return false;
+            }
     };
 
     class IntResolvedType : public ResolvedType {
@@ -38,7 +49,7 @@ namespace Typecheck
             }
 
             bool equals (const std::shared_ptr<ResolvedType> other) override {
-                return dynamic_cast<IntResolvedType*>(other.get()) != NULL;
+                return std::dynamic_pointer_cast<IntResolvedType>(other) != NULL;
             }
     };
 
@@ -49,6 +60,10 @@ namespace Typecheck
             std::string to_string() override {
                 return "(FloatType)";
             }
+
+            bool equals (const std::shared_ptr<ResolvedType> other) override {
+                return std::dynamic_pointer_cast<FloatResolvedType>(other) != NULL;
+            }
     };
 
     class BoolResolvedType : public ResolvedType {
@@ -57,6 +72,10 @@ namespace Typecheck
 
             std::string to_string() override {
                 return "(BoolType)";
+            }
+
+            bool equals (const std::shared_ptr<ResolvedType> other) override {
+                return std::dynamic_pointer_cast<BoolResolvedType>(other) != NULL;
             }
     };
 
@@ -74,25 +93,53 @@ namespace Typecheck
                 }
                 return str + ")";
             }
+
+            bool equals (const std::shared_ptr<ResolvedType> other) override {
+                std::shared_ptr<TupleResolvedType> otherTy = std::dynamic_pointer_cast<TupleResolvedType>(other);
+                if (!(otherTy) || tys.size() != otherTy->tys.size()) {
+                    return false;
+                }
+                for (int i = 0; i < tys.size(); i++) {
+                    if (!tys[i]->equals(otherTy->tys[i])) {
+                        return false;
+                    }
+                }
+                return true;   
+            }
     };
 
     class ArrayResolvedType : public ResolvedType {
         public:
             std::shared_ptr<ResolvedType> ty;
+            long long rank;
             
-            ArrayResolvedType(std::shared_ptr<ResolvedType> ty) :
-                ty(std::move(ty)) {}
+            ArrayResolvedType(std::shared_ptr<ResolvedType> ty, long long rank) :
+                ty(std::move(ty)), rank(rank) {}
 
             std::string to_string() override {
-                return "(ArrayResolvedType " + ty->to_string() + ")";
+                return "(ArrayType " + ty->to_string() + " " + std::to_string(rank) + ")";
             }
+
+            bool equals (const std::shared_ptr<ResolvedType> other) override {
+                std::shared_ptr<ArrayResolvedType> otherTy = std::dynamic_pointer_cast<ArrayResolvedType>(other);
+                if (!(otherTy)) {
+                    return false;
+                } 
+                return ty->equals(otherTy->ty);
+            }
+
+
     };
 
 
     class TypeChecker {
         private:
             std::vector<std::shared_ptr<Parse::ASTNode>> astTree;
-            
+            std::vector<std::vector<std::string>> operatorSplit;
+            std::shared_ptr<ResolvedType> type_of(std::shared_ptr<Parse::ASTNode>);
+
+            void type_cmd(std::shared_ptr<Parse::ASTNode>);
+
         public:
             TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>>);
 

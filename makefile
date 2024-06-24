@@ -1,6 +1,6 @@
 
 TEST=test.jpl
-FLAGS=-p
+FLAGS=-t
 
 INCLUDE = ../include/
 CXX=clang++
