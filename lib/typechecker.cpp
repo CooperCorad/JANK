@@ -44,6 +44,7 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd) {
 
 
 std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNode> expr) {
+    // literal and type exprs
     if(dynamic_pointer_cast<IntExpr>(expr) || dynamic_pointer_cast<IntType>(expr)) {
         return make_shared<IntResolvedType>();
     } else if(dynamic_pointer_cast<FloatExpr>(expr) || dynamic_pointer_cast<FloatType>(expr)) {
@@ -74,6 +75,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         return make_shared<ArrayResolvedType>(fstTy, 1);
     }
     
+    // operation exprs
     else if(shared_ptr<BinopExpr> bExpr = dynamic_pointer_cast<BinopExpr>(expr)) {
         shared_ptr<ResolvedType> lTy = type_of(bExpr->lExpr);
         shared_ptr<ResolvedType> rTy = type_of(bExpr->rExpr);
@@ -83,9 +85,15 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             bExpr->rExpr->setResolvedType(rTy);
 
             if (find(operatorSplit[0].begin(), operatorSplit[0].end(), bExpr->op) != operatorSplit[0].end()) {
+                // does +, -, /, % | VV TOOD: may cause issues later with array access additions? VV
+                if (!lTy->equals(make_unique<IntResolvedType>()) || lTy->equals(make_unique<FloatResolvedType>())) {
+                    throw TypeCheckException("You cannot use the " + bExpr->op + " on type: " + lTy->to_string());
+                }
+
                 return lTy;
             } else if (lTy->equals(make_unique<BoolResolvedType>()) 
                         && find(operatorSplit[1].begin(), operatorSplit[1].end(), bExpr->op) != operatorSplit[1].end()) {
+                //does <=, >=, <, >
                 throw TypeCheckException("You cannot mathematically compare booleans!");
             } else {
                 return make_unique<BoolResolvedType>();
@@ -94,5 +102,16 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             throw TypeCheckException("You cannot have a binary operation on incompatible types: " + lTy->to_string() + " " + bExpr->op \
                 + " " + rTy->to_string());
         }
+    } else if (shared_ptr<UnopExpr> uExpr = dynamic_pointer_cast<UnopExpr>(expr)) {
+        shared_ptr<ResolvedType> subTy = type_of(uExpr->expr);
+        
+        if (uExpr->op == "!" && !subTy->equals(make_unique<BoolResolvedType>())) {
+            throw TypeCheckException("You cannot do a boolean negation (!) on a non boolean expr: " + subTy->to_string());
+        } else if (uExpr->op == "-" && !(subTy->equals(make_unique<IntResolvedType>()) || subTy->equals(make_unique<FloatResolvedType>()))) {
+            throw TypeCheckException("You cannot do a mathematical negation (-) on a non mathematical expr: " + subTy->to_string());
+        }
+        uExpr->expr->setResolvedType(subTy);
+        uExpr->setResolvedType(subTy);
+        return subTy;
     }
 }
