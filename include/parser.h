@@ -39,80 +39,6 @@ namespace Parse
     // };
 
 
-    class Variable : public ASTNode {
-        public:
-            std::string name;
-            Variable(std::string name) : name(name) {}
-            ~Variable() override = default;
-            std::string to_string() override { return name; }
-    };
-
-
-    class Argument : public ASTNode {};
-
-    class VarArgument : public Argument {
-        public:
-            std::shared_ptr<Variable> variable;
-            VarArgument(std::unique_ptr<Variable> variable) :
-                variable(std::move(variable)) {}
-            ~VarArgument() override = default;
-            std::string to_string() override {
-                return "(VarArgument " + variable->to_string() + ")"; 
-            }
-
-    };
-    class ArgLValue : public Argument {
-        public:
-            std::shared_ptr<Argument> varArg;
-            ArgLValue(std::unique_ptr<Argument> varArg) :
-                varArg(std::move(varArg)) {}
-            ~ArgLValue() = default;
-            std::string to_string() override {
-                return "(ArgLValue " + varArg->to_string() + ")";
-            }
-    }; // TODO: move to LValue class?
-    class TupleLValue : public Argument {
-        public:
-            std::vector<std::shared_ptr<Argument>> args;
-
-            TupleLValue(std::vector<std::unique_ptr<Argument>> inArgs) {
-                args.insert(args.end(),
-                    std::make_move_iterator(inArgs.begin()),
-                    std::make_move_iterator(inArgs.end()));
-            }
-            ~TupleLValue() = default;
-
-            std::string to_string() override {
-                std::string str = "(TupleLValue";
-                for(const auto &a: args) {
-                    str += " " + a->to_string();
-                }
-                return str + ")";
-            }
-    };
-    class ArrayArgument : public Argument {
-        public:
-            std::shared_ptr<Variable> var;
-            std::vector<std::shared_ptr<Variable>> vars;
-
-            ArrayArgument(std::unique_ptr<Variable> var, std::vector<std::unique_ptr<Variable>> inVars) :
-                var(std::move(var)) {
-                    vars.insert(vars.end(),
-                    std::make_move_iterator(inVars.begin()),
-                    std::make_move_iterator(inVars.end()));
-                }
-            ~ArrayArgument() = default;
-
-            std::string to_string() override {
-                std::string str = "(ArrayArgument " + var->to_string();
-                for (const auto &v: vars) {
-                    str += " " + v->to_string();
-                }
-                return str + ")";
-            }
-    };
-
-
     class Expr : public ASTNode { 
         public: 
             mutable std::shared_ptr<Typecheck::ResolvedType> ty;
@@ -197,7 +123,7 @@ namespace Parse
             ~TrueExpr() = default;
             std::string to_string() override {
                 std::string tyStr = "";
-                if (ty) " " + tyStr = ty->to_string(); 
+                if (ty) tyStr = " " + ty->to_string(); 
                 return "(TrueExpr" + tyStr + ")"; 
             }
     };
@@ -324,7 +250,9 @@ namespace Parse
             ~UnopExpr() = default;
 
             std::string to_string() override {
-                return "(UnopExpr " + op + " " + expr->to_string() + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(UnopExpr " + tyStr + op + " " + expr->to_string() + ")";
             }
     };
     class BinopExpr : public Expr {
@@ -338,7 +266,9 @@ namespace Parse
             ~BinopExpr() = default;
 
             std::string to_string() override {
-                return "(BinopExpr " + lExpr->to_string() + " " + op + " " + rExpr->to_string() + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(BinopExpr " + tyStr + lExpr->to_string() + " " + op + " " + rExpr->to_string() + ")";
             }
     };
     class IfExpr : public Expr {
@@ -352,7 +282,9 @@ namespace Parse
             ~IfExpr() = default;
 
             std::string to_string() override {
-                return "(IfExpr " + condExpr->to_string() + " " + thenExpr->to_string() + " " + elseExpr->to_string() + ")";
+                std::string tyStr = "";
+                if (ty) tyStr = ty->to_string() + " ";
+                return "(IfExpr " + tyStr + condExpr->to_string() + " " + thenExpr->to_string() + " " + elseExpr->to_string() + ")";
             }
     };
     class ArrayLoopExpr : public Expr {
@@ -373,7 +305,7 @@ namespace Parse
             ~ArrayLoopExpr() = default;
 
             std::string to_string() override {
-                std::string str = "(ArrayLoopExpr";
+                std::string str = "(ArrayLoopExpr" + ((!ty) ? "" : " " + ty->to_string());
                 for (int i = 0; i < vars.size(); i++) {
                     str += " " + vars[i]->to_string() + " " + exprs[i]->to_string();
                 }
@@ -398,7 +330,7 @@ namespace Parse
             ~SumLoopExpr() = default;
 
             std::string to_string() override {
-                std::string str = "(SumLoopExpr";
+                std::string str = "(SumLoopExpr" + ((!ty) ? "" : " " + ty->to_string());
                 for (int i = 0; i < vars.size(); i++) {
                     str += " " + vars[i]->to_string() + " " + exprs[i]->to_string();
                 }
@@ -571,9 +503,9 @@ namespace Parse
             }
     };
     class WriteCmd : public Cmd {
-        std::shared_ptr<Expr> exp;
-        std::string str;
         public:
+            std::shared_ptr<Expr> exp;
+            std::string str;
             WriteCmd(std::unique_ptr<Expr> exp, std::string str) :
                 exp(std::move(exp)), str(str) {}
             ~WriteCmd() = default;
