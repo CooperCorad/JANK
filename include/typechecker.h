@@ -6,6 +6,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
+#include <memory>
 
 namespace Parse {
     class ASTNode {
@@ -215,7 +216,7 @@ namespace Typecheck
 
             bool equals (const std::shared_ptr<ResolvedType> other) override {
                 std::shared_ptr<ArrayResolvedType> otherTy = std::dynamic_pointer_cast<ArrayResolvedType>(other);
-                if (!(otherTy)) {
+                if (!(otherTy) || otherTy->rank != rank) {
                     return false;
                 } 
                 return ty->equals(otherTy->ty);
@@ -279,7 +280,7 @@ namespace SymTbl
             }
 
             std::shared_ptr<NameInfo> get(std::string name) {
-                if (has(name)) {
+                if (tbl.contains(name)) {
                     return tbl.at(name);
                 } else if (parent == NULL) {
                     return NULL;
@@ -343,6 +344,7 @@ namespace Typecheck
         public:
             TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>>);
 
+            void globalSetup();
             void prettyPrint();
             void doTypeCheck();
 

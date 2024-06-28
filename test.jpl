@@ -1,2 +1,2 @@
-let a = sum[a: 1, b: 30] 1.
-show a
+let a[b] = {1, 2}
+

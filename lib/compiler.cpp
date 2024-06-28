@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
             exit(-1);
         }
         TypeChecker tcMachine = TypeChecker(parseMachine.getAst());
+        tcMachine.globalSetup();
         try {
             tcMachine.doTypeCheck();
         } catch (TypeCheckException &e) {

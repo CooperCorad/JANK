@@ -18,7 +18,12 @@ TypeChecker::TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>> astTree) :
         operatorSplit =   { {"<=", "<", ">=", ">", "==", "!="}, // num comparisons
                             {"||", "&&", "==", "!="} }; // bool comparisons
         globalTbl = make_shared<SymbolTable>();
-    }
+}
+
+void Typecheck::TypeChecker::globalSetup() {
+    globalTbl->add("argnum", make_shared<VariableInfo>(make_shared<IntResolvedType>()));
+    globalTbl->add("args", make_shared<VariableInfo>(make_shared<ArrayResolvedType>(make_shared<IntResolvedType>(), 1)));
+}
 
 void TypeChecker::prettyPrint() {
     for (const shared_ptr<ASTNode> &node : astTree) {
@@ -26,6 +31,7 @@ void TypeChecker::prettyPrint() {
     }
     cout << "Compilation succeeded: parsing complete\n";
 }
+
 
 void TypeChecker::doTypeCheck() {
     for (const auto &ast: astTree) {
@@ -40,7 +46,21 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<
         sCmd->expr->setResolvedType(std::move(retTy));
         // cout << retTy->to_string() << endl;
     } else if (shared_ptr<ReadCmd> rCmd = dynamic_pointer_cast<ReadCmd>(cmd)){
-        
+        vector<shared_ptr<ResolvedType>> tupVec = {make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>()};
+        shared_ptr<VariableInfo> pict = make_shared<VariableInfo>(make_shared<ArrayResolvedType>(make_shared<TupleResolvedType>(tupVec), 2));
+        if (shared_ptr<VarArgument> vArg = dynamic_pointer_cast<VarArgument>(rCmd->varArg)) {
+            tbl->add(vArg->variable->name, pict);
+        } else if (shared_ptr<ArrayArgument> arrArg = dynamic_pointer_cast<ArrayArgument>(rCmd->varArg)) {
+            if (arrArg->vars.size() != 2) {
+                throw TypeCheckException("You cannot bind a " + to_string(arrArg->vars.size()) + " sized argument to an image (2D Array)");
+            }
+            for (const auto &v: arrArg->vars) {
+                tbl->add(v->name, make_shared<VariableInfo>(make_shared<IntResolvedType>()));
+            }
+            tbl->add(arrArg->var->name, pict);
+        } else {
+            throw TypeCheckException("You cannot bind an image to a " + rCmd->varArg->to_string());
+        }      
     } else if (shared_ptr<WriteCmd> wCmd = dynamic_pointer_cast<WriteCmd>(cmd)) {
         shared_ptr<ResolvedType> retTy = type_of(wCmd->exp, tbl);
         vector<shared_ptr<ResolvedType>> tupVec = {make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>()};
@@ -48,7 +68,6 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<
         if (!pict.equals(retTy)) {
             throw TypeCheckException("You cannot write in image not of the form {float, float, float, float}[,]");
         }
-        // setResolvevedType?
     } else if (shared_ptr<LetCmd> lCmd = dynamic_pointer_cast<LetCmd>(cmd)) {
         shared_ptr<ResolvedType> expTy = type_of(lCmd->expr, tbl);
         tbl->addLVal(lCmd->lval, expTy);
@@ -58,14 +77,10 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<
         if(!aExpr) {
             throw TypeCheckException("You cannot assert on a non boolean expression: " + aCmd->expr->to_string());
         }
-
     } else if (shared_ptr<TimeCmd> tCmd = dynamic_pointer_cast<TimeCmd>(cmd)) {
         type_cmd(tCmd->cmd, tbl);
     }
-
-
 }
-
 
 std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNode> expr, std::shared_ptr<SymTbl::SymbolTable> tbl) {
     // literal exprs
@@ -177,7 +192,8 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         } else if (tTy->tys.size() - 1 < indx || indx < 0) {
             throw TypeCheckException("You cannot access a tuple of size " + to_string(tTy->tys.size()) + " out of bounds");
         } 
-        iExpr->expr->setResolvedType(tTy); 
+        // iExpr->expr->setResolvedType(tTy);
+        iExpr->setResolvedType(tTy->tys[indx]); 
         return tTy->tys[indx];        
     }
 
@@ -200,12 +216,14 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             throw TypeCheckException("You cannot create a 0 dimension array");
         }
         shared_ptr<SymbolTable> childTbl = tbl->makeChild();
-        for (int i = 0; i < arrExpr->vars.size(); i++) {
+        for (int i = 0; i < arrExpr->exprs.size(); i++) {
             shared_ptr<IntResolvedType> limTy = dynamic_pointer_cast<IntResolvedType>(type_of(arrExpr->exprs[i], childTbl));
             if (!limTy) {
                 throw TypeCheckException("You cannot base the limits of a loop on a non integer expression");
             }
-            childTbl->add(arrExpr->vars[i]->name, make_shared<VariableInfo>(limTy));
+        }
+        for (int i = 0; i < arrExpr->vars.size(); i++) {
+            childTbl->add(arrExpr->vars[i]->name, make_shared<VariableInfo>(make_shared<IntResolvedType>()));
         }
         shared_ptr<ResolvedType> bdTy = type_of(arrExpr->body, childTbl);
         arrExpr->body->setResolvedType(bdTy);
@@ -217,12 +235,14 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             throw TypeCheckException("You cannot create a 0 dimension array");
         }
         shared_ptr<SymbolTable> childTbl = tbl->makeChild();
-        for (int i = 0; i < sumExpr->vars.size(); i++) {
+        for (int i = 0; i < sumExpr->exprs.size(); i++) {
             shared_ptr<IntResolvedType> limTy = dynamic_pointer_cast<IntResolvedType>(type_of(sumExpr->exprs[i], childTbl));
             if (!limTy) {
                 throw TypeCheckException("You cannot base the limits of a loop on a non integer expression");
             }
-            childTbl->add(sumExpr->vars[i]->name, make_shared<VariableInfo>(limTy));
+        }
+        for (int i = 0; i < sumExpr->vars.size(); i++) {
+            childTbl->add(sumExpr->vars[i]->name, make_shared<VariableInfo>(make_shared<IntResolvedType>()));
         }
         shared_ptr<ResolvedType> bdTy = type_of(sumExpr->body, childTbl);
         if (!dynamic_pointer_cast<IntResolvedType>(bdTy) && !dynamic_pointer_cast<FloatResolvedType>(bdTy)) {
@@ -232,7 +252,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         return bdTy;
     }
 
-    // variable handeling
+    // variable handling
     else if (shared_ptr<VarExpr> vExpr = dynamic_pointer_cast<VarExpr>(expr)) {
         if (vExpr->var->name == "pict.") {
             vector<shared_ptr<ResolvedType>> tupVec = {make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>()};
@@ -245,6 +265,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             if (!vInfo) {
                 throw TypeCheckException(vExpr->var->name + " is not a variable");
             }
+            vExpr->setResolvedType(vInfo->ty);
             return vInfo->ty;
         } else {
             throw TypeCheckException(vExpr->var->name + " is an unbound variable in this scope");
