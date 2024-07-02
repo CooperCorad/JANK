@@ -233,7 +233,7 @@ namespace Parse
             ~CallExpr() = default;
 
             std::string to_string() override {
-                std::string str = "(CallExpr " + var->to_string();
+                std::string str = "(CallExpr " + ((ty) ? ty->to_string() + " " : "") + var->to_string();
                 for (const auto &e: parameters) {
                     str += " " + e->to_string();
                 }
@@ -411,8 +411,6 @@ namespace Parse
 
     };
 
-
-    class Binding : public ASTNode {};
 
     class VarBinding : public Binding {
         public:

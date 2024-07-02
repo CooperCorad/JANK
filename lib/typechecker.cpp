@@ -12,6 +12,12 @@ string TypeCheckException::what() {
     return message;
 }
 
+static std::shared_ptr<SymbolTable> makeChildTbl(std::shared_ptr<SymbolTable> parent) {
+    shared_ptr<SymbolTable> child = make_shared<SymbolTable>();
+    child->parent = parent;
+    return child;
+}
+
 
 TypeChecker::TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>> astTree) :
     astTree(std::move(astTree)) {
@@ -23,13 +29,32 @@ TypeChecker::TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>> astTree) :
 void Typecheck::TypeChecker::globalSetup() {
     globalTbl->add("argnum", make_shared<VariableInfo>(make_shared<IntResolvedType>()));
     globalTbl->add("args", make_shared<VariableInfo>(make_shared<ArrayResolvedType>(make_shared<IntResolvedType>(), 1)));
+    
+    vector<shared_ptr<ResolvedType>> fl1_fl1_vec { make_shared<FloatResolvedType>() };
+    shared_ptr<FunctionInfo> fl1_fl1_info = make_shared<FunctionInfo>(fl1_fl1_vec, make_shared<FloatResolvedType>(), nullptr);
+    vector<string> fl1_fl1_names{ "sqrt", "exp", "sin", "cos", "tan", "asin", "acos", "atan", "log" };
+    for (const string &n: fl1_fl1_names) {
+        globalTbl->add(n, fl1_fl1_info);
+    }
+
+    vector<shared_ptr<ResolvedType>> fl2_fl1_vec { make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>() };
+    shared_ptr<FunctionInfo> fl2_fl1_info = make_shared<FunctionInfo>(fl2_fl1_vec, make_shared<FloatResolvedType>(), nullptr);
+    globalTbl->add("pow", fl2_fl1_info);
+    globalTbl->add("atan2", fl2_fl1_info);
+
+    vector<shared_ptr<ResolvedType>> i1_fl1_vec { make_shared<IntResolvedType>() };
+    globalTbl->add("to_float", make_shared<FunctionInfo>(i1_fl1_vec, make_shared<FloatResolvedType>(), nullptr));
+
+    vector<shared_ptr<ResolvedType>> fl1_i1_vec { make_shared<FloatResolvedType>() };
+    globalTbl->add("to_int", make_shared<FunctionInfo>(fl1_i1_vec, make_shared<IntResolvedType>(), nullptr));
+
 }
 
 void TypeChecker::prettyPrint() {
     for (const shared_ptr<ASTNode> &node : astTree) {
         cout << node->to_string() << endl;
     }
-    cout << "Compilation succeeded: parsing complete\n";
+    cout << "Compilation succeeded: type analysis complete\n";
 }
 
 
@@ -44,7 +69,6 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<
     if (shared_ptr<ShowCmd> sCmd = dynamic_pointer_cast<ShowCmd>(cmd)) {
         shared_ptr<ResolvedType> retTy = type_of(sCmd->expr, tbl);
         sCmd->expr->setResolvedType(std::move(retTy));
-        // cout << retTy->to_string() << endl;
     } else if (shared_ptr<ReadCmd> rCmd = dynamic_pointer_cast<ReadCmd>(cmd)){
         vector<shared_ptr<ResolvedType>> tupVec = {make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>(), make_shared<FloatResolvedType>()};
         shared_ptr<VariableInfo> pict = make_shared<VariableInfo>(make_shared<ArrayResolvedType>(make_shared<TupleResolvedType>(tupVec), 2));
@@ -79,8 +103,70 @@ void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<
         }
     } else if (shared_ptr<TimeCmd> tCmd = dynamic_pointer_cast<TimeCmd>(cmd)) {
         type_cmd(tCmd->cmd, tbl);
+    } else if (shared_ptr<TypeCmd> tyCmd = dynamic_pointer_cast<TypeCmd>(cmd)) {
+        tbl->add(tyCmd->var->name, make_shared<VariableInfo>(type_of(tyCmd->ty, tbl)));
+    } else if (shared_ptr<FnCmd> fCmd = dynamic_pointer_cast<FnCmd>(cmd)) {
+        shared_ptr<SymbolTable> fnTbl = makeChildTbl(tbl);
+        vector<shared_ptr<ResolvedType>> bindTys;
+        for (const auto &b: fCmd->bindings) {
+            bindTys.push_back(type_binds(b, fnTbl));
+        }
+        shared_ptr<ResolvedType> retTy = type_of(fCmd->retTy, tbl);
+        tbl->add(fCmd->var->name, make_shared<FunctionInfo>(bindTys, retTy, fnTbl));
+
+        bool returnFound = false;
+        shared_ptr<TupleResolvedType> rtup = dynamic_pointer_cast<TupleResolvedType>(retTy);
+        bool emptyReturn = (bool)(rtup && rtup->tys.size() == 0);
+
+        for(const auto &s: fCmd->statements) {
+            shared_ptr<ResolvedType> sTy = type_stmt(s, fnTbl);
+            if (shared_ptr<ReturnStmt> prTy = dynamic_pointer_cast<ReturnStmt>(s)) {
+                if (!prTy->retExp->ty->equals(retTy)) {
+                    throw TypeCheckException("return type " + prTy->retExp->ty->to_string() + " is not the stated " + retTy->to_string());
+                } 
+                returnFound = true;
+            }
+        }
+        if (!returnFound && !emptyReturn) {
+            throw TypeCheckException("You must have a return value!");
+        }
+    }   
+}
+
+std::shared_ptr<ResolvedType> TypeChecker::type_binds(std::shared_ptr<Binding> bind, std::shared_ptr<SymbolTable> tbl) {
+    if (shared_ptr<VarBinding> vBind = dynamic_pointer_cast<VarBinding>(bind)) {
+        shared_ptr<ResolvedType> vTy = type_of(vBind->ty, tbl);
+        tbl->addArg(vBind->arg, vTy);
+        return vTy;
+    } else if (shared_ptr<TupleBinding> tBind = dynamic_pointer_cast<TupleBinding>(bind)) {
+        vector<shared_ptr<ResolvedType>> subTys;
+        for (const auto &b: tBind->bindings) {
+            subTys.push_back(type_binds(b, tbl));
+        }
+        return make_shared<TupleResolvedType>(subTys);
+    } else {
+        throw TypeCheckException("Binds cannot be a non Lval");
     }
 }
+
+std::shared_ptr<ResolvedType> TypeChecker::type_stmt(std::shared_ptr<Parse::ASTNode> stmt, std::shared_ptr<SymTbl::SymbolTable> tbl) {
+    if (auto lStmt = dynamic_pointer_cast<LetStmt>(stmt)) {
+        shared_ptr<ResolvedType> letTy = type_of(lStmt->expr, tbl);
+        tbl->addLVal(lStmt->lval, letTy);
+        return letTy;
+    } else if (auto aStmt = dynamic_pointer_cast<AssertStmt>(stmt)) {
+        shared_ptr<BoolResolvedType> condTy = dynamic_pointer_cast<BoolResolvedType>(type_of(aStmt->expr, tbl));
+        if (!condTy) {
+            throw TypeCheckException("Assert statements must operate on a boolean expr not " + aStmt->to_string());
+        }
+        return condTy;
+    } else if (auto rStmt = dynamic_pointer_cast<ReturnStmt>(stmt)) {
+        return type_of(rStmt->retExp, tbl);
+    } else {
+        throw TypeCheckException("you cannot parse a non stmt with this function, impossible?");
+    }
+}
+
 
 std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNode> expr, std::shared_ptr<SymTbl::SymbolTable> tbl) {
     // literal exprs
@@ -100,9 +186,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         vector<shared_ptr<ResolvedType>> tys; 
         for (const auto &e: tExpr->exprs) { //TODO: memsafe action? VV all VV ??
             shared_ptr<ResolvedType> subTy = type_of(e, tbl);
-            // cout << subTy->to_string() << endl;
             tys.push_back(subTy);
-            // e->setResolvedType(std::move(subTy));
         }
         shared_ptr<TupleResolvedType> tTy = make_shared<TupleResolvedType>(tys);
         tExpr->setResolvedType(tTy);
@@ -215,7 +299,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         if (!arrExpr->vars.size()) {
             throw TypeCheckException("You cannot create a 0 dimension array");
         }
-        shared_ptr<SymbolTable> childTbl = tbl->makeChild();
+        shared_ptr<SymbolTable> childTbl = makeChildTbl(tbl);
         for (int i = 0; i < arrExpr->exprs.size(); i++) {
             shared_ptr<IntResolvedType> limTy = dynamic_pointer_cast<IntResolvedType>(type_of(arrExpr->exprs[i], childTbl));
             if (!limTy) {
@@ -234,7 +318,7 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         if (!sumExpr->vars.size()) {
             throw TypeCheckException("You cannot create a 0 dimension array");
         }
-        shared_ptr<SymbolTable> childTbl = tbl->makeChild();
+        shared_ptr<SymbolTable> childTbl = makeChildTbl(tbl);
         for (int i = 0; i < sumExpr->exprs.size(); i++) {
             shared_ptr<IntResolvedType> limTy = dynamic_pointer_cast<IntResolvedType>(type_of(sumExpr->exprs[i], childTbl));
             if (!limTy) {
@@ -270,6 +354,50 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
         } else {
             throw TypeCheckException(vExpr->var->name + " is an unbound variable in this scope");
         }
+    } else if (shared_ptr<CallExpr> cExpr = dynamic_pointer_cast<CallExpr>(expr)) {
+        shared_ptr<FunctionInfo> fInfo = dynamic_pointer_cast<FunctionInfo>(tbl->get(cExpr->var->name));
+        if(!fInfo) {
+            throw TypeCheckException("You cannot call a non function " + cExpr->var->name);
+        } else if (fInfo->argTys.size() != cExpr->parameters.size()) {
+            throw TypeCheckException("Your function call parameters do not match the size " + to_string(cExpr->parameters.size()));
+        }
+
+        for (int i = 0; i < fInfo->argTys.size(); i++) {
+            shared_ptr<ResolvedType> paramTy = type_of(cExpr->parameters[i], tbl);
+            if (!paramTy->equals(fInfo->argTys[i])) {
+                throw TypeCheckException("You cannot pass a param of type " + paramTy->to_string() + " as a " + fInfo->argTys[i]->to_string());
+            }
+        }
+        cExpr->setResolvedType(fInfo->retTy);
+        return fInfo->retTy;
     }
+
+    // explicit typing
+    else if (dynamic_pointer_cast<IntType>(expr)) {
+        return make_shared<IntResolvedType>();
+    } else if (dynamic_pointer_cast<FloatType>(expr)) {
+        return make_shared<FloatResolvedType>();
+    } else if (dynamic_pointer_cast<BoolType>(expr)) {
+        return make_shared<BoolResolvedType>();
+    } else if (shared_ptr<TupleType> ttyExpr = dynamic_pointer_cast<TupleType>(expr)) {
+        vector<shared_ptr<ResolvedType>> rTys;
+        for (const auto &t: ttyExpr->tys) {
+            rTys.push_back(type_of(t, tbl));
+        }
+        return make_shared<TupleResolvedType>(rTys);
+    } else if (shared_ptr<ArrayType> atyExpr = dynamic_pointer_cast<ArrayType>(expr)) {
+        return make_shared<ArrayResolvedType>(type_of(atyExpr->ty, tbl), atyExpr->dimension);
+    } else if (shared_ptr<VarType> vTyExpr = dynamic_pointer_cast<VarType>(expr)) {
+        if (tbl->has(vTyExpr->var->name)) {
+            shared_ptr<VariableInfo> vInfo = dynamic_pointer_cast<VariableInfo>(tbl->get(vTyExpr->var->name));
+            if (!vInfo) {
+                throw TypeCheckException(vTyExpr->var->name + " is not a variable");
+            }
+            return vInfo->ty;
+        } else {
+            throw TypeCheckException("The custom type name " + vTyExpr->var->name + " is not bound");
+        }
+    }
+
     throw TypeCheckException("You've made an impossible situation, an object with no parse type");
 }

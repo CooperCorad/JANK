@@ -80,7 +80,6 @@ int Lexer::lexWhiteSpc(int pos)
         } else if (file[pos] == '/') {
             if (file[pos+1] == '/'){
                 while (pos < fsize && file[pos] != '\n'){
-                    // cout << "/";
                     pos++;
                 }
                 if(pos == fsize) {
@@ -94,7 +93,6 @@ int Lexer::lexWhiteSpc(int pos)
             } else if (file[pos+1] == '*') {
                 pos += 2;
                 while (pos < fsize) {
-                    // cout << "*";
                     if (pos == fsize-1) {
                         return -1;
                     } 

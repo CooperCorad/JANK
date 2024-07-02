@@ -89,6 +89,9 @@ namespace Parse {
                 return str + ")";
             }
     };
+
+    class Binding : public ASTNode {};
+
 }
 
 namespace Typecheck
@@ -231,6 +234,8 @@ namespace Typecheck
 
 namespace SymTbl
 {
+    class SymbolTable;
+
     class NameInfo {
         public:
             NameInfo() = default;
@@ -246,21 +251,27 @@ namespace SymTbl
             ~VariableInfo() = default;
     };
 
+    class FunctionInfo : public NameInfo {
+        public:
+            std::vector<std::shared_ptr<Typecheck::ResolvedType>> argTys;
+            std::shared_ptr<Typecheck::ResolvedType> retTy;
+            std::shared_ptr<SymbolTable> tbl;
+
+            FunctionInfo(std::vector<std::shared_ptr<Typecheck::ResolvedType>> argTys, std::shared_ptr<Typecheck::ResolvedType> retTy, std::shared_ptr<SymTbl::SymbolTable> tbl) :
+                argTys(argTys), retTy(retTy), tbl(tbl) {}
+            ~FunctionInfo() = default;
+    };
+
     class SymbolTable {
         private:
             std::unordered_map<std::string, std::shared_ptr<NameInfo>> tbl;
-            std::shared_ptr<SymbolTable> parent;
         public:
+            std::shared_ptr<SymbolTable> parent;
             SymbolTable() {
                 parent = NULL;
             }
             ~SymbolTable() = default;
 
-            std::shared_ptr<SymbolTable> makeChild() {
-                std::shared_ptr<SymbolTable> child = std::make_shared<SymbolTable>();
-                child->parent = std::make_shared<SymbolTable>(*this); //TODO ???? works?
-                return child;
-            }
 
             bool has(std::string name) {
                 if (tbl.contains(name)) {
@@ -297,9 +308,11 @@ namespace SymTbl
                         if (arrTy->rank != arrArg->vars.size()) {
                             throw Typecheck::TypeCheckException("You cannot bind an array of rank " + std::to_string(arrArg->vars.size()) + \
                             " to an binding of rank " + std::to_string(arrTy->rank));
-                        }
+                        } 
                         add(arrArg->var->name, std::make_shared<VariableInfo>(ty));
-                    } 
+                    } else {
+                        throw Typecheck::TypeCheckException("You cannot bind an array to a " + ty->to_string());
+                    }
                     for (const auto &a: arrArg->vars) {
                         add(a->name, std::make_shared<VariableInfo>(std::make_shared<Typecheck::IntResolvedType>()));
                     }
@@ -319,6 +332,8 @@ namespace SymTbl
                     }
                  } else if (std::shared_ptr<Parse::ArgLValue> lArg = std::dynamic_pointer_cast<Parse::ArgLValue>(arg)) {
                     addArg(lArg->varArg, ty);
+                 } else if (std::shared_ptr<Parse::VarArgument> vArg = std::dynamic_pointer_cast<Parse::VarArgument>(arg)) {
+                    addArg(vArg, ty);
                  } else {
                     throw Typecheck::TypeCheckException("You cannot add a non lVal");
                  }
@@ -338,8 +353,10 @@ namespace Typecheck
             std::vector<std::vector<std::string>> operatorSplit;
             std::shared_ptr<SymTbl::SymbolTable> globalTbl;
 
+            std::shared_ptr<ResolvedType> type_binds(std::shared_ptr<Parse::Binding>, std::shared_ptr<SymTbl::SymbolTable>);
             std::shared_ptr<ResolvedType> type_of(std::shared_ptr<Parse::ASTNode>, std::shared_ptr<SymTbl::SymbolTable>);
             void type_cmd(std::shared_ptr<Parse::ASTNode>, std::shared_ptr<SymTbl::SymbolTable>);
+            std::shared_ptr<ResolvedType> type_stmt(std::shared_ptr<Parse::ASTNode>, std::shared_ptr<SymTbl::SymbolTable>);
 
         public:
             TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>>);
