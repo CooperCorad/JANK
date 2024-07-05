@@ -20,13 +20,20 @@ namespace Parse {
     class Variable : public ASTNode {
         public:
             std::string name;
-            Variable(std::string name) : name(name) {}
+            bool mut;
+
+            Variable(std::string name) : name(name) { mut = false; }
             ~Variable() override = default;
             std::string to_string() override { return name; }
+            void makeMutable() { mut = true; }
     };
 
 
-    class Argument : public ASTNode {};
+    class Argument : public ASTNode {
+        public:
+            bool mut;
+            virtual void maketMutable() { mut = true; }
+    };
 
     class VarArgument : public Argument {
         public:

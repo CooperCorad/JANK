@@ -137,7 +137,7 @@ std::tuple<std::unique_ptr<Lex::Token>, int> Lexer::lexItem(int pos) {
     regex word("^[a-zA-Z]+[a-zA-Z0-9_\\.]*");
     regex op("^((&&)|(\\|\\|)|(<=)|(>=)|(<)|(>)|(==)|(!=)|(\\+)|(-)|(\\*)|(/)|(%)|(!))");
     regex st("\"[ !#-~]*\""); //TODO: works? ^ needed?
-    regex punct("^[\\:\\{\\}\\(\\)\\[\\],=]");
+    regex punct("^((:=)|[\\:\\{\\}\\(\\)\\[\\],=])");
 
     if (regex_search(curr.begin(), curr.end(), match, fl)) {
         return make_tuple(make_unique<Token>(FLOATVAL, pos, match[0]), match[0].length() + pos);
@@ -150,6 +150,7 @@ std::tuple<std::unique_ptr<Lex::Token>, int> Lexer::lexItem(int pos) {
         }
         return make_tuple(make_unique<Token>(t, pos, match[0]), match[0].length() + pos);
     } else if (regex_search(curr.begin(), curr.end(), match, op)) {
+        cout << match[0] << endl;
         return make_tuple(make_unique<Token>(OP, pos, match[0]), match[0].length() + pos);
     } else if (regex_search(curr.begin(), curr.end(), match, punct)) {
         return make_tuple(make_unique<Token>(strToTokty(match[0]), pos, match[0]), match[0].length() + pos);        
@@ -158,5 +159,3 @@ std::tuple<std::unique_ptr<Lex::Token>, int> Lexer::lexItem(int pos) {
     }
     return make_tuple(make_unique<Token>(Token()), -1);
 }
-
-

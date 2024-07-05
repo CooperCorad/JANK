@@ -41,6 +41,7 @@ namespace Lex
         LSQUARE, 
         RSQUARE, 
         EQUALS,
+        MUT_EQ,
         STRING, 
         INTVAL, 
         FLOATVAL, 
@@ -48,7 +49,8 @@ namespace Lex
         OP, 
         NEWLINE, 
         END_OF_FILE,
-        OP_OR_VAR
+        OP_OR_VAR,
+        MUTABLE
     };
 
     static std::unordered_map<std::string, Tokty> const tbl = {
@@ -59,7 +61,8 @@ namespace Lex
         {"type", TYPE}, {"write", WRITE}, {":", COLON}, {"{", LCURLY}, {"}", RCURLY},
         {"(", LPAREN}, {")", RPAREN}, {",", COMMA}, {"[", LSQUARE}, {"]", RSQUARE},
         {"=", EQUALS}, {"string", STRING}, {"intval", INTVAL}, {"floatval", FLOATVAL},
-        {"variable", VARIABLE}, {"op", OP}, {"read", READ}, {"\n", NEWLINE}, {"eof", END_OF_FILE}, {"time", TIME}
+        {"variable", VARIABLE}, {"op", OP}, {"read", READ}, {"\n", NEWLINE}, {"eof", END_OF_FILE}, {"time", TIME}, 
+        {"mutable", MUTABLE}, {":=", MUT_EQ}
     };
 
     static std::unordered_map<Tokty, std::string> const revTbl = {
@@ -70,8 +73,8 @@ namespace Lex
         {TYPE, "TYPE"}, {WRITE, "WRITE"}, {COLON, "COLON"}, {LCURLY, "LCURLY"}, {RCURLY, "RCURLY"},
         {LPAREN, "LPAREN"}, {RPAREN, "RPAREN"}, {COMMA, "COMMA"}, {LSQUARE, "LSQUARE"}, {RSQUARE, "RSQUARE"},
         {EQUALS, "EQUALS"}, {STRING, "STRING"}, {INTVAL, "INTVAL"}, {FLOATVAL, "FLOATVAL"},
-        {VARIABLE, "VARIABLE"}, {OP, "OP"}, {READ, "READ"}, {NEWLINE, "NEWLINE"}, {END_OF_FILE, "END_OF_FILE"}
-
+        {VARIABLE, "VARIABLE"}, {OP, "OP"}, {READ, "READ"}, {NEWLINE, "NEWLINE"}, {END_OF_FILE, "END_OF_FILE"},
+        {MUTABLE, "MUTABLE"}, {MUT_EQ, "MUTABLE EQUALS"}
     };
 
 

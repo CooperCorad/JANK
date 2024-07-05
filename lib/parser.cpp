@@ -125,6 +125,8 @@ std::pair<std::unique_ptr<Cmd>, int> Parser::parseTypeCmd(int pos) {
 
 std::pair<std::unique_ptr<Cmd>, int> Parser::parseLetCmd(int pos) {
     expectToken(&pos, LET);
+    bool isMutable = (peekToken(pos) == MUTABLE);
+    
     unique_ptr<Argument> lval;
     tie(lval, pos) = parseLValue(pos);
     expectToken(&pos, EQUALS);

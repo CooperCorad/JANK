@@ -13,6 +13,9 @@ all: run
 
 compile: compiler.o
 
+llvmgenerator.o:
+	$(CXX) $(CXXFLAGS) -c lib/llvmgenerator.cpp -o src/llvmgenerator.o
+
 typechecker.o: 
 	$(CXX) $(CXXFLAGS) -c lib/typechecker.cpp -o src/typechecker.o
 
@@ -25,7 +28,7 @@ lexer.o:
 compiler.o:
 	$(CXX) $(CXXFLAGS) -c lib/compiler.cpp -o src/compiler.o
 
-a.out: lexer.o parser.o typechecker.o compiler.o
+a.out: lexer.o parser.o typechecker.o llvmgenerator.o compiler.o
 	$(CXX) $(CXXFLAGS) src/*.o -o a.out
 
 run:
