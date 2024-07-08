@@ -126,10 +126,17 @@ std::pair<std::unique_ptr<Cmd>, int> Parser::parseTypeCmd(int pos) {
 std::pair<std::unique_ptr<Cmd>, int> Parser::parseLetCmd(int pos) {
     expectToken(&pos, LET);
     bool isMutable = (peekToken(pos) == MUTABLE);
-    
+    if (isMutable) {
+        expectToken(&pos, MUTABLE);
+    }
     unique_ptr<Argument> lval;
     tie(lval, pos) = parseLValue(pos);
-    expectToken(&pos, EQUALS);
+    if (isMutable) {
+        lval->makeMutable();
+        expectToken(&pos, MUT_EQ);
+    } else {
+        expectToken(&pos, EQUALS);
+    }
     unique_ptr<Expr> expr;
     tie(expr, pos) = parseExpr(pos);
     return make_tuple(make_unique<LetCmd>(std::move(lval), std::move(expr)), pos);
@@ -217,8 +224,20 @@ std::pair<std::unique_ptr<Stmt>, int> Parser::parseLetStmt(int pos) {
     unique_ptr<Expr> expr;
 
     expectToken(&pos, LET);
+    bool isMutable = (peekToken(pos) == MUTABLE);
+    if (isMutable) {
+        expectToken(&pos, MUTABLE);
+    }
+
     tie(lval, pos) = parseLValue(pos);
-    expectToken(&pos, EQUALS);
+    
+    if (isMutable) {
+        expectToken(&pos, MUT_EQ);
+        lval->makeMutable();
+    } else {
+        expectToken(&pos, EQUALS);
+    }
+
     tie(expr, pos) = parseExpr(pos);
     return make_tuple(make_unique<LetStmt>(std::move(lval), std::move(expr)), pos);
 }

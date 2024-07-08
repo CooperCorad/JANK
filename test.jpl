@@ -1,2 +1,7 @@
 let mutable x := 1
-let mutable x := 100
+let u = 1
+let mutable a[w, h] := array[x: 1, y:2] x + y
+// w + h not mutable!! OR when a redefined -> w, h invaidated unless redefined
+fn a() : {} {
+  let mutable a[b] := array[i:1] 2
+}
