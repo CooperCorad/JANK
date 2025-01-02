@@ -20,20 +20,13 @@ namespace Parse {
     class Variable : public ASTNode {
         public:
             std::string name;
-            bool mut;
-
-            Variable(std::string name) : name(name) { mut = false; }
+            Variable(std::string name) : name(name) {}
             ~Variable() override = default;
-            std::string to_string() override { return ((mut) ? "mutable " : "") + name; }
-            void makeMutable() { mut = true; }
+            std::string to_string() override { return name; }
     };
 
 
-    class Argument : public ASTNode {
-        public:
-            bool mut;
-            virtual void makeMutable() { return; }
-    };
+    class Argument : public ASTNode {};
 
     class VarArgument : public Argument {
         public:
@@ -44,7 +37,6 @@ namespace Parse {
             std::string to_string() override {
                 return "(VarArgument " + variable->to_string() + ")"; 
             }
-            void makeMutable() override { variable->makeMutable(); };
 
     };
     class ArgLValue : public Argument {
@@ -56,8 +48,6 @@ namespace Parse {
             std::string to_string() override {
                 return "(ArgLValue " + varArg->to_string() + ")";
             }
-            void makeMutable() override { varArg->makeMutable(); }
-
     }; // TODO: move to LValue class?
     class TupleLValue : public Argument {
         public:
@@ -76,12 +66,6 @@ namespace Parse {
                     str += " " + a->to_string();
                 }
                 return str + ")";
-            }
-
-            void makeMutable() override {
-                for (const auto &a: args) {
-                    a->makeMutable();
-                }
             }
     };
     class ArrayArgument : public Argument {
@@ -103,13 +87,6 @@ namespace Parse {
                     str += " " + v->to_string();
                 }
                 return str + ")";
-            }
-
-            void makeMutable() override {
-                var->makeMutable();
-                for (const auto &v: vars) {
-                    v->makeMutable();
-                }
             }
     };
 
