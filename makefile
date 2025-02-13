@@ -6,8 +6,11 @@ INCLUDE = ../include/
 CXX=clang++
 # CXXFLAGS=-Og -std=c++17 -Werror -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
 # CXXFLAGS=-Og -std=c++20 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
-# CXXFLAGS=-Og -std=c++20 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
-CXXFLAGS=-O3 -std=c++20 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
+CXXFLAGS=-Og -std=c++23 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
+# CXXFLAGS=-O3 -std=c++20 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
+
+a.out: lexer.o parser.o typechecker.o compiler.o
+	$(CXX) $(CXXFLAGS) src/*.o -o JANK
 
 all: run
 
@@ -25,11 +28,8 @@ lexer.o:
 compiler.o:
 	$(CXX) $(CXXFLAGS) -c lib/compiler.cpp -o src/compiler.o
 
-a.out: lexer.o parser.o typechecker.o compiler.o
-	$(CXX) $(CXXFLAGS) src/*.o -o a.out
-
 run:
-	./a.out $(FLAGS) $(TEST)
+	./JANK $(FLAGS) $(TEST)
 
 comp:
 	./a.out $(FLAGS) $(TEST) > eval/mine.txt
@@ -40,7 +40,7 @@ janker: lexer.o parser.o compiler.o
 	$(CXX) $(CXXFLAGS) src/compiler.o src/parser.o src/lexer.o -o src/jank
 
 jank:
-	./src/jank $(FLAGS) $(TEST)
+	a.out
 
 clean:
-	rm -f src/*.o src/a.out src/jank.out
+	rm -f src/*.o JANK src/jank.out
