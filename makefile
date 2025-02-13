@@ -15,14 +15,14 @@ LLVM_SRC_ROOT =
 
 
 
-a.out: lexer.o parser.o typechecker.o compiler.o
+a.out: lexer.o parser.o typechecker.o driver.o
 	$(CXX) $(CXXFLAGS) src/*.o -o JANK
 
 all: run
 
-compile: compiler.o
+compile: driver.o
 
-typechecker.o: 
+typechecker.o:  # perhaps lib -> src && src -> ??? depends on prod
 	$(CXX) $(CXXFLAGS) -c lib/typechecker.cpp -o src/typechecker.o
 
 parser.o: 
@@ -31,8 +31,8 @@ parser.o:
 lexer.o: 
 	$(CXX) $(CXXFLAGS) -c lib/lexer.cpp -o src/lexer.o
 
-compiler.o:
-	$(CXX) $(CXXFLAGS) -c lib/compiler.cpp -o src/compiler.o
+driver.o:
+	$(CXX) $(CXXFLAGS) -c lib/driver.cpp -o src/driver.o
 
 run:
 	./JANK $(FLAGS) $(TEST)
@@ -42,8 +42,8 @@ comp:
 	./jplc-macos $(FLAGS) $(TEST) > eval/def.txt
 	diff -c eval/def.txt eval/mine.txt
 
-janker: lexer.o parser.o compiler.o
-	$(CXX) $(CXXFLAGS) src/compiler.o src/parser.o src/lexer.o -o src/jank
+janker: lexer.o parser.o driver.o
+	$(CXX) $(CXXFLAGS) src/driver.o src/parser.o src/lexer.o -o src/jank
 
 jank:
 	a.out
