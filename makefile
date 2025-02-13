@@ -1,7 +1,6 @@
 
 TEST=test.jpl
 FLAGS=-t
-
 INCLUDE = ../include/
 CXX=clang++
 # CXXFLAGS=-Og -std=c++17 -Werror -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
