@@ -1,3 +1,0 @@
-./a.out -l test.jpl
-Compilation failed
-make: Nothing to be done for 'test.jpl'.

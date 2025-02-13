@@ -1,7 +1,0 @@
-read image "photo.png" to photo
-write image hoog to "photo.png"
-type varword = float
-let x = f
-assert a , "Photo must be 600 pixels tall"
-print "horkadorkinggngn"
-show turd

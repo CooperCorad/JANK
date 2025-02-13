@@ -1,4 +1,7 @@
 __pycache__/*
 a.out
+JANK
 *.class
 *.o
+eval/*
+test.jpl
