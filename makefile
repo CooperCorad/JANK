@@ -8,6 +8,13 @@ CXX=clang++
 CXXFLAGS=-Og -std=c++23 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
 # CXXFLAGS=-O3 -std=c++20 -Wall -fsanitize=address,undefined -fno-sanitize-recover=address,undefined
 
+### LLVM IR VARIABLES
+LEVEL = ./lib # just '.' ?
+PROJECT_NAME = JANK
+LLVM_SRC_ROOT = 
+
+
+
 a.out: lexer.o parser.o typechecker.o compiler.o
 	$(CXX) $(CXXFLAGS) src/*.o -o JANK
 
