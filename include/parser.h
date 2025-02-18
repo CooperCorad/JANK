@@ -7,9 +7,8 @@
 #include <algorithm>
 #include <regex>
 
-#include "lexer.h"
-// #include "../include/ast.h"
-#include "typechecker.h"
+#include <lexer.h>
+#include <typechecker.h>
 
 /*
     TODO:   1. see if lvl6/cont necessary?

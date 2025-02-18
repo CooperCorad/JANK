@@ -1,6 +1,6 @@
 #include <typeinfo>
-#include "../include/parser.h"
-// #include "../include/ast.h"
+#include <parser.h>
+
 using namespace Parse;
 using namespace Lex;
 using namespace std;

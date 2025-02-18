@@ -5,3 +5,7 @@ JANK
 *.o
 eval/*
 test.jpl
+build
+CMake*
+-CMakeLists.txt
+.vscode

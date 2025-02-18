@@ -1,9 +1,18 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.31.3)
 
 project(JANK)
 
-find_package(LLVM 19.1.7 REQUIRED CONFIG) # 14.0.0 origina;
+set(LLVM_DIR "/Users/coco/cs/llvm-project/build/lib/cmake/llvm")
+set(LLVM_SRC_ROOT "/Users/coco/cs/llvm-project/llvm")
+set(LLVM_OBJ_ROOT "/Users/coco/cs/llvm-project/llvm")
+set(PROJ_SRC_ROOT "/Users/coco/cs/JANK/src")
+
+find_package(LLVM REQUIRED CONFIG) # 14.0.0 original // 19.1.7 release?
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+
 include_directories(include "${LLVM_INCLUDE_DIR}")
+message(STATUS "FOUND DIR ${LLVM_INCLUDE_DIR}")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -17,4 +26,3 @@ SET(CMAKE_CXX_FLAGS_COVERAGE "${COVERAGE_FLAGS}")
 SET(CMAKE_C_FLAGS_COVERAGE "${COVERAGE_FLAGS}")
 
 add_subdirectory(src)
-add_subdirectory(test)

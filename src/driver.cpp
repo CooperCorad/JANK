@@ -1,10 +1,8 @@
 #include <iostream>
-// #include "../include/ast.h"
 
-#include "../include/lexer.h"
-#include "../include/parser.h"
-#include "../include/typechecker.h"
-
+#include <lexer.h>
+#include <parser.h>
+#include <typechecker.h>
 
 using namespace std;
 using namespace Lex;
