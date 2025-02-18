@@ -1,4 +1,4 @@
-JANK (Just A New Kompiler(Compiler))
+JANK (Just A Nother Kompiler(Compiler))
 ==========================
 
 C++ based compiler utilizing LLVMIR to compile JPL (JohnPavelLang - University of Utah) 
