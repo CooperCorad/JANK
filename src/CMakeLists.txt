@@ -2,7 +2,7 @@ file(GLOB compiler_src CONFIGURE_DEPENDS "*.cpp")
 
 add_executable(JANK ${compiler_src})
 
-include_directories("../include" "${LLVM_INCLUDE_DIR}")
+include_directories("../include" "${LLVM_INCLUDE_DIR}" "../llvm-project/llvm/include")
 
 llvm_map_components_to_libnames(llvm_libs core)
 

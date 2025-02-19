@@ -1,5 +1,5 @@
-#include <typeinfo>
 #include <parser.h>
+#include <typeinfo>
 
 using namespace Parse;
 using namespace Lex;

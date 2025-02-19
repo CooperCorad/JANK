@@ -66,6 +66,10 @@ void TypeChecker::doTypeCheck() {
 
 }
 
+std::vector<std::shared_ptr<Parse::ASTNode>> TypeChecker::getAst() {
+    return (std::move(astTree));
+}
+
 void TypeChecker::type_cmd(std::shared_ptr<Parse::ASTNode> cmd, std::shared_ptr<SymTbl::SymbolTable> tbl) {
     if (shared_ptr<ShowCmd> sCmd = dynamic_pointer_cast<ShowCmd>(cmd)) {
         shared_ptr<ResolvedType> retTy = type_of(sCmd->expr, tbl);

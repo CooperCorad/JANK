@@ -364,7 +364,7 @@ namespace Typecheck
             void globalSetup();
             void prettyPrint();
             void doTypeCheck();
-
+            std::vector<std::shared_ptr<Parse::ASTNode>> getAst();
     };
 
 
