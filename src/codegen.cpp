@@ -31,8 +31,9 @@ void CodeGenerator::prettyprint() {
 
 
 Value *CodeGenerator::genCommand(shared_ptr<ASTNode> cmd) {
-    if (auto letCmd = dynamic_pointer_cast<LetCmd>(cmd)) {
-        
+    if (auto lCmd = dynamic_pointer_cast<LetCmd>(cmd)) {
+        Value *expr = genExpr(lCmd->expr);
+        // expr->setName(lCmd->lval->)
     }
 
 
@@ -179,5 +180,11 @@ Value *CodeGenerator::genUnopExpr(shared_ptr<UnopExpr> uExpr) {
     } else { // (bool or int)
         return Builder.CreateXor(subExpr, 1); //TODO: ?????
     }
+    return nullptr;
+}
+
+
+Function *genFn(shared_ptr<FnCmd> fnCmd) {
+    
     return nullptr;
 }

@@ -31,8 +31,10 @@ namespace Codegen
         llvm::Value *genCommand(std::shared_ptr<Parse::ASTNode>);
 
         llvm::Value *genExpr(std::shared_ptr<Parse::ASTNode>);
-        llvm::Value *genUnopExpr(std::shared_ptr<Parse::UnopExpr>);
         llvm::Value *genBinopExpr(std::shared_ptr<Parse::BinopExpr>);
+        llvm::Value *genUnopExpr(std::shared_ptr<Parse::UnopExpr>);
+
+        llvm::Function *genFn(std::shared_ptr<Parse::FnCmd>);
 
 
         public:
