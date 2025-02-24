@@ -43,11 +43,11 @@ unique_ptr<TypeChecker> throughTypeChecker(string filename) {
     return std::move(tyc);
 }
 
-unique_ptr<CodeGen> throughCodeGen(string filename) {
+unique_ptr<CodeGenerator> throughCodeGenerator(string filename) {
     unique_ptr<TypeChecker> tyc = throughTypeChecker(filename);
-    unique_ptr<CodeGen> cog = make_unique<CodeGen>(filename, tyc->getAst());
+    unique_ptr<CodeGenerator> cog = make_unique<CodeGenerator>(filename, tyc->getAst());
     //TODO: ...
-    return nullptr;
+    return std::move(cog);
 }
 
 
@@ -95,6 +95,11 @@ int main(int argc, char **argv) {
         // }
         unique_ptr<TypeChecker> tyc = throughTypeChecker(argv[2]);
         tyc->prettyPrint();
+    } else if (!strcmp(argv[1], "-c")) {
+        unique_ptr<CodeGenerator> cog = throughCodeGenerator(argv[2]);
+        if (!strcmp(argv[3], "-emit")) {
+            cog->prettyprint();
+        }
     }
 
 

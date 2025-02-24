@@ -350,7 +350,6 @@ namespace Typecheck
     class TypeChecker {
         private:
             std::vector<std::shared_ptr<Parse::ASTNode>> astTree;
-            std::vector<std::vector<std::string>> operatorSplit;
             std::shared_ptr<SymTbl::SymbolTable> globalTbl;
 
             std::shared_ptr<ResolvedType> type_binds(std::shared_ptr<Parse::Binding>, std::shared_ptr<SymTbl::SymbolTable>);

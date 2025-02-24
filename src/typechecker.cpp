@@ -1,9 +1,11 @@
 #include <parser.h>
 #include <typechecker.h>
+#include <utils.h>
 
 using namespace Parse;
 using namespace Typecheck;
 using namespace SymTbl;
+
 using namespace std;
 
 TypeCheckException::TypeCheckException(string msg) :
@@ -22,8 +24,6 @@ static std::shared_ptr<SymbolTable> makeChildTbl(std::shared_ptr<SymbolTable> pa
 
 TypeChecker::TypeChecker(std::vector<std::shared_ptr<Parse::ASTNode>> astTree) :
     astTree(std::move(astTree)) {
-        operatorSplit =   { {"<=", "<", ">=", ">", "==", "!="}, // num comparisons
-                            {"||", "&&", "==", "!="} }; // bool comparisons
         globalTbl = make_shared<SymbolTable>();
 }
 
@@ -223,11 +223,11 @@ std::shared_ptr<ResolvedType> TypeChecker::type_of(std::shared_ptr<Parse::ASTNod
             if (FloatResolvedType().equals(lTy) || IntResolvedType().equals(lTy)) {
                 if (bExpr->op == "||" || bExpr->op == "&&") {
                     throw TypeCheckException("You cannot do a boolean operation (&&, ||) on non booleans");
-                } else if (find(operatorSplit[0].begin(), operatorSplit[0].end(), bExpr->op) != operatorSplit[0].end()) {
+                } else if (find(utils::operatorSplit[0].begin(), utils::operatorSplit[0].end(), bExpr->op) != utils::operatorSplit[0].end()) {
                     lTy = make_shared<BoolResolvedType>();
                 }
             } else if (BoolResolvedType().equals(lTy)) {
-                if (find(operatorSplit[1].begin(), operatorSplit[1].end(), bExpr->op) == operatorSplit[1].end()) {
+                if (find(utils::operatorSplit[1].begin(), utils::operatorSplit[1].end(), bExpr->op) == utils::operatorSplit[1].end()) {
                     throw TypeCheckException("You cannot do a non boolean operation " + bExpr->op + " on booleans");
                 } 
             } else if (!FloatResolvedType().equals(lTy) && !IntResolvedType().equals(lTy) && !BoolResolvedType().equals(lTy)) {
