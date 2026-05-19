@@ -1,0 +1,3 @@
+cmake -G Ninja build
+ninja -C build
+./build/bin/JANK [options] [file]

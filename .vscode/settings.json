@@ -54,6 +54,9 @@
         "unordered_map": "cpp",
         "__tree": "cpp",
         "map": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "print": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     }
 }

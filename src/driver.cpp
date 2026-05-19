@@ -46,6 +46,8 @@ unique_ptr<TypeChecker> throughTypeChecker(string filename) {
 unique_ptr<CodeGenerator> throughCodeGenerator(string filename) {
     unique_ptr<TypeChecker> tyc = throughTypeChecker(filename);
     unique_ptr<CodeGenerator> cog = make_unique<CodeGenerator>(filename, tyc->getAst());
+    cout << "genned\n";
+    cog->generateLLVM();
     //TODO: ...
     return std::move(cog);
 }

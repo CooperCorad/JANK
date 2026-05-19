@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/Users/coco/cs/JANK",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++ -I/Users/coco/cs/JANK/include -I/Users/coco/cs/llvm-project/build/include -I/Users/coco/cs/JANK/../llvm-project/llvm/include -I/Users/coco/cs/JANK/src/../include -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o src/CMakeFiles/JANK.dir/codegen.cpp.o -c /Users/coco/cs/JANK/src/codegen.cpp",
+  "file": "/Users/coco/cs/JANK/src/codegen.cpp",
+  "output": "/Users/coco/cs/JANK/src/CMakeFiles/JANK.dir/codegen.cpp.o"
+},
+{
+  "directory": "/Users/coco/cs/JANK",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++ -I/Users/coco/cs/JANK/include -I/Users/coco/cs/llvm-project/build/include -I/Users/coco/cs/JANK/../llvm-project/llvm/include -I/Users/coco/cs/JANK/src/../include -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o src/CMakeFiles/JANK.dir/driver.cpp.o -c /Users/coco/cs/JANK/src/driver.cpp",
+  "file": "/Users/coco/cs/JANK/src/driver.cpp",
+  "output": "/Users/coco/cs/JANK/src/CMakeFiles/JANK.dir/driver.cpp.o"
+},
+{
+  "directory": "/Users/coco/cs/JANK",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++ -I/Users/coco/cs/JANK/include -I/Users/coco/cs/llvm-project/build/include -I/Users/coco/cs/JANK/../llvm-project/llvm/include -I/Users/coco/cs/JANK/src/../include -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o src/CMakeFiles/JANK.dir/lexer.cpp.o -c /Users/coco/cs/JANK/src/lexer.cpp",
+  "file": "/Users/coco/cs/JANK/src/lexer.cpp",
+  "output": "/Users/coco/cs/JANK/src/CMakeFiles/JANK.dir/lexer.cpp.o"
+},
+{
+  "directory": "/Users/coco/cs/JANK",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++ -I/Users/coco/cs/JANK/include -I/Users/coco/cs/llvm-project/build/include -I/Users/coco/cs/JANK/../llvm-project/llvm/include -I/Users/coco/cs/JANK/src/../include -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o src/CMakeFiles/JANK.dir/parser.cpp.o -c /Users/coco/cs/JANK/src/parser.cpp",
+  "file": "/Users/coco/cs/JANK/src/parser.cpp",
+  "output": "/Users/coco/cs/JANK/src/CMakeFiles/JANK.dir/parser.cpp.o"
+},
+{
+  "directory": "/Users/coco/cs/JANK",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++ -I/Users/coco/cs/JANK/include -I/Users/coco/cs/llvm-project/build/include -I/Users/coco/cs/JANK/../llvm-project/llvm/include -I/Users/coco/cs/JANK/src/../include -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -o src/CMakeFiles/JANK.dir/typechecker.cpp.o -c /Users/coco/cs/JANK/src/typechecker.cpp",
+  "file": "/Users/coco/cs/JANK/src/typechecker.cpp",
+  "output": "/Users/coco/cs/JANK/src/CMakeFiles/JANK.dir/typechecker.cpp.o"
+}
+]

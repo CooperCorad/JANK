@@ -15,6 +15,7 @@ using namespace std;
 
 using namespace llvm;
 
+
 CodeGenerator::CodeGenerator(string filename, vector<shared_ptr<ASTNode>> astTree):
     Builder(TheContext, llvm::ConstantFolder()),
     astTree(std::move(astTree))
@@ -25,13 +26,19 @@ CodeGenerator::CodeGenerator(string filename, vector<shared_ptr<ASTNode>> astTre
 }
 
 void CodeGenerator::prettyprint() {
-    cout << "IM PRETTY!" << endl;
+    cout << ";\t PRETTY!" << endl;
 }
 
+void CodeGenerator::generateLLVM() {
+    cout << "what's up loser" << endl;
+    //Total bullshit fake code test case
+    cout << astTree.at(0)->to_string();
+}
 
 
 Value *CodeGenerator::genCommand(shared_ptr<ASTNode> cmd) {
     if (auto lCmd = dynamic_pointer_cast<LetCmd>(cmd)) {
+        cout << "here~\n";
         Value *expr = genExpr(lCmd->expr);
         // expr->setName(lCmd->lval->)
     }
